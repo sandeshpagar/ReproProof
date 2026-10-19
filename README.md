@@ -39,7 +39,7 @@ This project is designed for the OmniRush Frontier Buildathon. It is intentional
 
 ## Status
 
-Phase 1 foundation, Phase 2 static audit engine, and Phase 3 execution flow are implemented. The local application exposes a health endpoint, audits repositories through the CLI and API, runs bounded local project tests, and supports a network-isolated Docker rehearsal when Docker is available.
+Phase 1 foundation, Phase 2 static audit engine, Phase 3 execution flow, and Phase 4 interactive dashboard are implemented. The local application exposes a health endpoint, audits repositories through the browser, CLI, and API, runs bounded local project tests, and supports a network-isolated Docker rehearsal when Docker is available.
 
 ## Requirements
 
@@ -66,6 +66,15 @@ npm start
 ```
 
 Then open `http://127.0.0.1:4173` in a browser. The server binds to localhost by default. The health endpoint is available at `http://127.0.0.1:4173/api/health`.
+
+The dashboard workflow is:
+
+1. Enter a local repository path.
+2. Run the static audit.
+3. Filter findings by blockers, warnings, or passes.
+4. Expand a finding to inspect evidence and remediation.
+5. Run local tests or the Docker clean-room rehearsal.
+6. Export the current result as Markdown or JSON.
 
 ## Test
 

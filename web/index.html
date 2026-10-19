@@ -32,8 +32,8 @@
       <section class="workspace" aria-labelledby="workspace-title">
         <div class="section-heading">
           <div>
-            <p class="eyebrow">Phase 1 foundation</p>
-            <h2 id="workspace-title">Your audit workspace</h2>
+            <p class="eyebrow">Phase 4 workspace</p>
+            <h2 id="workspace-title">Audit a repository</h2>
           </div>
           <span class="tag">Local only</span>
         </div>
@@ -42,45 +42,117 @@
           <article class="card project-card">
             <div class="card-icon" aria-hidden="true">01</div>
             <div>
-              <h3>Select a repository</h3>
+              <h3>Start with a clean-room question</h3>
               <p>
-                The audit engine will inspect files on this machine. No repository
-                contents are uploaded.
+                ReproProof inspects files on this machine. Nothing is uploaded and
+                execution only starts after you ask for it.
               </p>
             </div>
-            <label class="field-label" for="repository-path">Repository path</label>
-            <input
-              id="repository-path"
-              class="text-input"
-              type="text"
-              placeholder="./my-repository"
-              autocomplete="off"
-            />
-            <button class="primary-button" type="button" disabled>
-              Run audit · Phase 2
-            </button>
+            <form id="audit-form">
+              <label class="field-label" for="repository-path">Repository path</label>
+              <input
+                id="repository-path"
+                class="text-input"
+                type="text"
+                value="./fixtures/passing-repository"
+                placeholder="./my-repository"
+                autocomplete="off"
+                spellcheck="false"
+                required
+              />
+              <p class="field-hint">Try the passing fixture, then audit <code>./fixtures/broken-repository</code>.</p>
+              <button id="run-audit" class="primary-button" type="submit">
+                Run static audit
+              </button>
+              <p id="path-error" class="inline-error" role="alert" hidden></p>
+            </form>
           </article>
 
-          <article class="card score-card">
+          <article class="card score-card" aria-live="polite">
             <div class="card-icon card-icon-success" aria-hidden="true">✓</div>
             <div>
               <h3>Readiness score</h3>
-              <p>Static checks and clean-room rehearsal will appear here.</p>
+              <p id="score-description">Static checks and clean-room rehearsal will appear here.</p>
             </div>
-            <div class="score-placeholder" aria-label="Audit not started">
-              <span>—</span>
+            <div class="score-display" aria-label="Audit not started">
+              <span id="score-value">—</span>
               <small>/ 100</small>
             </div>
-            <div class="score-caption">No audit started yet</div>
+            <div id="score-status" class="score-caption">No audit started yet</div>
+            <div class="summary-grid" aria-label="Audit summary">
+              <div><strong id="passed-count">—</strong><span>passed</span></div>
+              <div><strong id="warning-count">—</strong><span>warnings</span></div>
+              <div><strong id="blocker-count">—</strong><span>blockers</span></div>
+            </div>
           </article>
         </div>
+
+        <div id="audit-progress" class="progress-panel" aria-live="polite" hidden>
+          <div class="progress-heading">
+            <div>
+              <p class="eyebrow">Live progress</p>
+              <strong id="progress-title">Preparing audit…</strong>
+            </div>
+            <span id="progress-detail">Local scan</span>
+          </div>
+          <div class="progress-track"><span id="progress-bar"></span></div>
+          <div class="progress-stages">
+            <span data-stage="scanning">Scanning</span>
+            <span data-stage="checking">Checking</span>
+            <span data-stage="complete">Complete</span>
+          </div>
+        </div>
+      </section>
+
+      <section id="results-section" class="results-section" aria-labelledby="results-title" hidden>
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow">Evidence, not assumptions</p>
+            <h2 id="results-title">Audit findings</h2>
+          </div>
+          <span id="repository-name" class="tag">No repository</span>
+        </div>
+
+        <div class="results-toolbar">
+          <div class="filter-group" role="group" aria-label="Filter findings">
+            <button class="filter-button is-selected" type="button" data-filter="all" aria-pressed="true">All</button>
+            <button class="filter-button" type="button" data-filter="fail" aria-pressed="false">Blockers</button>
+            <button class="filter-button" type="button" data-filter="warning" aria-pressed="false">Warnings</button>
+            <button class="filter-button" type="button" data-filter="pass" aria-pressed="false">Passed</button>
+          </div>
+          <div class="export-group">
+            <button id="export-markdown" class="secondary-button" type="button" disabled>Export Markdown</button>
+            <button id="export-json" class="secondary-button" type="button" disabled>Export JSON</button>
+          </div>
+        </div>
+
+        <div id="findings-list" class="findings-list"></div>
+
+        <article class="verification-card" aria-labelledby="verification-title">
+          <div class="section-heading compact-heading">
+            <div>
+              <p class="eyebrow">Phase 3 verification</p>
+              <h2 id="verification-title">Prove it runs</h2>
+            </div>
+            <span id="verification-status" class="verification-badge">Not run</span>
+          </div>
+          <p class="verification-copy">
+            Run the project's test command locally, then rehearse it in a Docker
+            container with network access disabled.
+          </p>
+          <div class="verification-actions">
+            <button id="run-test" class="secondary-button" type="button" disabled>Run project tests</button>
+            <button id="run-rehearsal" class="primary-button compact-button" type="button" disabled>Run clean-room rehearsal</button>
+          </div>
+          <div id="execution-output" class="execution-output" hidden></div>
+        </article>
       </section>
 
       <section class="foundation" aria-labelledby="foundation-title">
         <div class="section-heading compact-heading">
           <div>
             <p class="eyebrow">System check</p>
-            <h2 id="foundation-title">The foundation is online</h2>
+            <h2 id="foundation-title">The verification loop is ready</h2>
           </div>
         </div>
         <div class="check-list">
@@ -97,7 +169,12 @@
           <div class="check-row">
             <span class="check-dot" aria-hidden="true">✓</span>
             <span>Audit engine</span>
-            <strong>Phase 2</strong>
+            <strong>Ready</strong>
+          </div>
+          <div class="check-row">
+            <span id="docker-check-dot" class="check-dot check-dot-muted" aria-hidden="true">·</span>
+            <span>Docker clean-room rehearsal</span>
+            <strong id="docker-check">Not checked</strong>
           </div>
         </div>
       </section>

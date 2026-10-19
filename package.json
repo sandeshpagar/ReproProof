@@ -11,7 +11,7 @@
     "dev": "npm run build && npm start",
     "build": "tsc",
     "start": "node dist/src/server/index.js",
-    "test": "npm run build && node --test dist/tests/*.test.js",
+    "test": "npm run build && node --check web/app.js && node --test dist/tests/*.test.js",
     "audit": "npm run build && node dist/src/cli/audit.js"
   },
   "keywords": [

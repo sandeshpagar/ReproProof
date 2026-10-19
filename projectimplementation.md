@@ -116,6 +116,8 @@ passes for the ReproProof project, and the demo fixture can show both a failed a
 
 ## 6. Phase 4 — Dashboard and user experience
 
+**Status:** Implemented with the browser audit workflow, evidence views, execution controls, and client-side exports.
+
 ### Objectives
 
 Make the workflow understandable and impressive in a short demo.
