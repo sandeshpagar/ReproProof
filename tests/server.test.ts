@@ -2,13 +2,15 @@ import assert from "node:assert/strict";
 import { resolve } from "node:path";
 import test from "node:test";
 
-import { createAppServer } from "../src/server/index.js";
+import type { DockerRehearsalResult } from "../src/execution/docker-rehearsal.js";
+import type { ExecutionResult } from "../src/domain/audit.js";
+import { createAppServer, type AppServerOptions } from "../src/server/index.js";
 
 const projectRoot = resolve(process.cwd());
 const passingFixture = resolve(projectRoot, "fixtures", "passing-repository");
 
-async function withServer<T>(callback: (baseUrl: string) => Promise<T>): Promise<T> {
-  const server = createAppServer();
+async function withServer<T>(callback: (baseUrl: string) => Promise<T>, options: AppServerOptions = {}): Promise<T> {
+  const server = createAppServer(options);
   await new Promise<void>((resolvePromise) => server.listen(0, "127.0.0.1", resolvePromise));
   const address = server.address();
 
@@ -51,4 +53,67 @@ test("POST /api/audits rejects malformed input without running a command", async
     assert.equal(response.status, 400);
     assert.equal(result.error, "repositoryPath must be a string.");
   });
+});
+
+test("audit API stores an audit and runs the local project test endpoint", async () => {
+  await withServer(async (baseUrl) => {
+    const createResponse = await fetch(`${baseUrl}/api/audits`, {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ repositoryPath: passingFixture }),
+    });
+    const created = (await createResponse.json()) as { auditId: string };
+
+    const getResponse = await fetch(`${baseUrl}/api/audits/${created.auditId}`);
+    const stored = (await getResponse.json()) as { auditId: string };
+    assert.equal(getResponse.status, 200);
+    assert.equal(stored.auditId, created.auditId);
+
+    const testResponse = await fetch(`${baseUrl}/api/audits/${created.auditId}/test`, { method: "POST" });
+    const testResult = (await testResponse.json()) as { execution: ExecutionResult; audit: { executions: ExecutionResult[] } };
+    assert.equal(testResponse.status, 200);
+    assert.equal(testResult.execution.status, "passed");
+    assert.equal(testResult.audit.executions.length, 1);
+  });
+});
+
+test("audit API exposes the clean-room rehearsal endpoint", async () => {
+  const fakeRehearsal: DockerRehearsalResult = {
+    status: "skipped",
+    networkMode: "none",
+    imageTag: "reproproof-test-image",
+    dockerAvailable: false,
+    reason: "Docker is unavailable in this test double.",
+    availability: {
+      label: "Docker availability check",
+      executable: "docker",
+      args: ["version"],
+      cwd: passingFixture,
+      status: "failed",
+      exitCode: 1,
+      signal: null,
+      durationMs: 1,
+      stdout: "",
+      stderr: "unavailable",
+      timedOut: false,
+      outputTruncated: false,
+      networkMode: "unspecified",
+      redactionsApplied: false,
+    },
+  };
+
+  await withServer(async (baseUrl) => {
+    const createResponse = await fetch(`${baseUrl}/api/audits`, {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ repositoryPath: passingFixture }),
+    });
+    const created = (await createResponse.json()) as { auditId: string };
+    const rehearsalResponse = await fetch(`${baseUrl}/api/audits/${created.auditId}/rehearsal`, { method: "POST" });
+    const rehearsalResult = (await rehearsalResponse.json()) as { rehearsal: DockerRehearsalResult };
+
+    assert.equal(rehearsalResponse.status, 200);
+    assert.equal(rehearsalResult.rehearsal.status, "skipped");
+    assert.equal(rehearsalResult.rehearsal.networkMode, "none");
+  }, { runRehearsal: async () => fakeRehearsal });
 });

@@ -47,13 +47,36 @@ export interface ScoreBreakdown {
   status: FindingStatus;
 }
 
+export type ExecutionStatus = "passed" | "failed" | "timed_out" | "skipped" | "spawn_error";
+
+export type NetworkMode = "none" | "local" | "unspecified";
+
+export interface ExecutionResult {
+  label: string;
+  executable: string;
+  args: string[];
+  cwd: string;
+  status: ExecutionStatus;
+  exitCode: number | null;
+  signal: string | null;
+  durationMs: number;
+  stdout: string;
+  stderr: string;
+  timedOut: boolean;
+  outputTruncated: boolean;
+  networkMode: NetworkMode;
+  redactionsApplied: boolean;
+  error?: string;
+}
+
 export interface AuditResult {
   toolVersion: string;
+  auditId?: string;
   repository: RepositoryDescriptor;
   startedAt: string;
   finishedAt: string;
   score: number;
   scoreBreakdown: ScoreBreakdown[];
   findings: Finding[];
-  executions: [];
+  executions: ExecutionResult[];
 }

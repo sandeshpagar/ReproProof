@@ -39,7 +39,7 @@ This project is designed for the OmniRush Frontier Buildathon. It is intentional
 
 ## Status
 
-Phase 1 foundation and Phase 2 static audit engine are implemented. The local application exposes a health endpoint, serves the dashboard shell, audits repositories through the CLI and API, and includes passing and intentionally broken fixtures. Docker verification remains a separate Phase 1/3 environment check when the local daemon is available.
+Phase 1 foundation, Phase 2 static audit engine, and Phase 3 execution flow are implemented. The local application exposes a health endpoint, audits repositories through the CLI and API, runs bounded local project tests, and supports a network-isolated Docker rehearsal when Docker is available.
 
 ## Requirements
 
@@ -77,7 +77,7 @@ npm test
 
 Tests must work without an internet connection after dependencies have been installed.
 
-The Phase 1 test verifies the application health response. Phase 2 adds scanner, reproducibility-rule, scoring, fixture, and API coverage. Execution and report coverage will be added in later phases.
+The Phase 1 test verifies the application health response. Phase 2 adds scanner, reproducibility-rule, scoring, fixture, and API coverage. Phase 3 adds bounded command execution, redaction, local test execution, and Docker rehearsal coverage. Report coverage will be added in a later phase.
 
 The Phase 2 suite covers repository scanning, reproducibility checks, deterministic scoring, fixture audits, invalid paths, and the `POST /api/audits` endpoint.
 
@@ -96,6 +96,18 @@ The passing fixture should score `100/100`. The broken fixture intentionally rep
 npm run audit -- ./fixtures/passing-repository --json
 ```
 
+Run the discovered local test command:
+
+```bash
+npm run audit -- ./fixtures/passing-repository --test
+```
+
+Run the Docker clean-room rehearsal. Docker image build output is captured and the test container always uses `--network none`:
+
+```bash
+npm run audit -- ./fixtures/passing-repository --rehearsal
+```
+
 The local API accepts only a repository path and never accepts a raw shell command:
 
 ```bash
@@ -104,6 +116,16 @@ curl.exe --fail --silent \
   -H "content-type: application/json" \
   -d "{\"repositoryPath\":\"./fixtures/passing-repository\"}"
 ```
+
+The create response includes an `auditId`. Use it to run the Phase 3 checks:
+
+```text
+GET  /api/audits/:auditId
+POST /api/audits/:auditId/test
+POST /api/audits/:auditId/rehearsal
+```
+
+If Docker is unavailable, the rehearsal returns `skipped` with a reason. It never reports a skipped rehearsal as passed.
 
 ## Docker verification
 

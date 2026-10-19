@@ -1,9 +1,13 @@
 import { createServer } from "node:http";
 import { readFile } from "node:fs/promises";
 import { extname, resolve } from "node:path";
+import { randomUUID } from "node:crypto";
 import { fileURLToPath } from "node:url";
 
 import { auditRepository } from "../audit/repository-audit.js";
+import type { AuditResult } from "../domain/audit.js";
+import { runCleanRoomRehearsal } from "../execution/docker-rehearsal.js";
+import { runProjectTest } from "../execution/project-test.js";
 import { RepositoryValidationError } from "../security/paths.js";
 import { getHealthResponse } from "./health.js";
 
@@ -19,6 +23,8 @@ const webFiles: Record<string, string> = {
 export interface AppServerOptions {
   webRoot?: string;
   runAudit?: typeof auditRepository;
+  runTest?: typeof runProjectTest;
+  runRehearsal?: typeof runCleanRoomRehearsal;
 }
 
 function getPort(value: string | undefined): number {
@@ -97,6 +103,9 @@ async function readJsonBody(request: import("node:http").IncomingMessage): Promi
 export function createAppServer(options: AppServerOptions = {}) {
   const webRoot = options.webRoot ?? resolve(process.cwd(), "web");
   const runAudit = options.runAudit ?? auditRepository;
+  const runTest = options.runTest ?? runProjectTest;
+  const runRehearsal = options.runRehearsal ?? runCleanRoomRehearsal;
+  const audits = new Map<string, AuditResult>();
 
   return createServer(async (request, response) => {
     try {
@@ -116,7 +125,47 @@ export function createAppServer(options: AppServerOptions = {}) {
         }
 
         const result = await runAudit((body as { repositoryPath: string }).repositoryPath);
-        writeJson(response, 200, result);
+        const auditId = randomUUID();
+        const storedResult = { ...result, auditId };
+        audits.set(auditId, storedResult);
+        writeJson(response, 200, storedResult);
+        return;
+      }
+
+      const auditMatch = requestUrl.pathname.match(/^\/api\/audits\/([^/]+)$/);
+
+      if (auditMatch && request.method === "GET") {
+        const audit = audits.get(auditMatch[1]);
+
+        if (!audit) {
+          writeJson(response, 404, { error: "Audit not found." });
+          return;
+        }
+
+        writeJson(response, 200, audit);
+        return;
+      }
+
+      const executionMatch = requestUrl.pathname.match(/^\/api\/audits\/([^/]+)\/(test|rehearsal)$/);
+
+      if (executionMatch && request.method === "POST") {
+        const audit = audits.get(executionMatch[1]);
+
+        if (!audit) {
+          writeJson(response, 404, { error: "Audit not found." });
+          return;
+        }
+
+        if (executionMatch[2] === "test") {
+          const execution = await runTest(audit.repository.rootPath);
+          const updated = { ...audit, executions: [...audit.executions, execution] };
+          audits.set(executionMatch[1], updated);
+          writeJson(response, 200, { auditId: executionMatch[1], audit: updated, execution });
+          return;
+        }
+
+        const rehearsal = await runRehearsal(audit.repository.rootPath);
+        writeJson(response, 200, { auditId: executionMatch[1], audit, rehearsal });
         return;
       }
 

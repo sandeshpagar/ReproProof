@@ -207,13 +207,14 @@ The local API may expose endpoints similar to:
 GET  /api/health
 POST /api/audits
 GET  /api/audits/:id
+POST /api/audits/:id/test
 POST /api/audits/:id/rehearsal
 GET  /api/audits/:id/report?format=markdown
 ```
 
 The API must validate request bodies and never accept a raw shell command from the browser.
 
-Phase 2 implements `POST /api/audits` with a JSON body containing only `repositoryPath`. It performs the static audit and returns the evidence-backed result. Execution and Docker rehearsal endpoints remain Phase 3 work.
+Phase 2 implements `POST /api/audits` with a JSON body containing only `repositoryPath`. Phase 3 adds stored audit lookup, bounded local test execution, and the Docker rehearsal endpoint. Execution results are captured with timeout, output, signal, network-mode, and redaction metadata.
 
 ## 9. Future MCP boundary
 

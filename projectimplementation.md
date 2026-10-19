@@ -89,6 +89,8 @@ Build the core product value without relying on Docker or external services.
 
 ## 5. Phase 3 — Execution and clean-room rehearsal
 
+**Status:** Implemented through the local test and Docker rehearsal adapters; final Docker verification depends on the local Docker daemon.
+
 ### Objectives
 
 Prove behavior rather than only inspect files.
