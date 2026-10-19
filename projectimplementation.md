@@ -168,6 +168,8 @@ Make the product safe, portable, and credible to a reviewer.
 
 ## 8. Phase 6 — Release, demo, and submission
 
+**Status:** Release package prepared; final video recording, exact session IDs, and external submission remain manual steps.
+
 ### Objectives
 
 Turn the working product into a clear evaluation package.

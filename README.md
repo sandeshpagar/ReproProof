@@ -14,7 +14,7 @@ Many repositories are easy to clone but difficult to run. Contributors may disco
 
 This project is designed for the OmniRush Frontier Buildathon. It is intentionally local-first and offline-compatible so it can be rebuilt in a clean Linux Docker environment.
 
-## Planned MVP
+## What it does
 
 - Select a local repository.
 - Run deterministic repository checks.
@@ -24,7 +24,7 @@ This project is designed for the OmniRush Frontier Buildathon. It is intentional
 - Run a network-isolated Docker rehearsal when Docker is available.
 - Export Markdown and JSON reports.
 
-## Planned checks
+## Audit checks
 
 - Pinned runtime version.
 - Dependency lockfile.
@@ -39,7 +39,7 @@ This project is designed for the OmniRush Frontier Buildathon. It is intentional
 
 ## Status
 
-Phase 1 foundation, Phase 2 static audit engine, Phase 3 execution flow, Phase 4 interactive dashboard, and Phase 5 reports/security hardening are implemented. The local application exposes a health endpoint, audits repositories through the browser, CLI, and API, runs bounded local project tests, supports a network-isolated Docker rehearsal, and exports versioned redacted reports.
+Phase 1 foundation, Phase 2 static audit engine, Phase 3 execution flow, Phase 4 interactive dashboard, Phase 5 reports/security hardening, and Phase 6 release preparation are complete. The local application exposes a health endpoint, audits repositories through the browser, CLI, and API, runs bounded local project tests, supports a network-isolated Docker rehearsal, and exports versioned redacted reports. Demo recording, exact OmniRush session IDs, and the external buildathon submission remain manual submission steps.
 
 ## Requirements
 
@@ -86,7 +86,7 @@ npm test
 
 Tests must work without an internet connection after dependencies have been installed.
 
-The Phase 1 test verifies the application health response. Phase 2 adds scanner, reproducibility-rule, scoring, fixture, and API coverage. Phase 3 adds bounded command execution, redaction, local test execution, and Docker rehearsal coverage. Report coverage will be added in a later phase.
+The Phase 1 test verifies the application health response. Phase 2 adds scanner, reproducibility-rule, scoring, fixture, and API coverage. Phase 3 adds bounded command execution, redaction, local test execution, and Docker rehearsal coverage. Phase 5 adds report and hardening coverage. Phase 6 verifies the release from a fresh checkout.
 
 The Phase 2 suite covers repository scanning, reproducibility checks, deterministic scoring, fixture audits, invalid paths, and the `POST /api/audits` endpoint.
 
@@ -156,6 +156,25 @@ docker run --rm --network none reproproof npm test
 
 The final implementation must ensure that this command succeeds on a clean Linux machine.
 
+## Fresh-checkout verification
+
+After cloning the public repository, run:
+
+```bash
+npm ci
+npm test
+npm run build
+```
+
+Once dependencies are available locally, the test command itself is offline-compatible:
+
+```bash
+npm ci --offline
+npm test
+```
+
+The release checklist is in [RELEASE_CHECKLIST.md](RELEASE_CHECKLIST.md). The two-minute recording plan is in [DEMO.md](DEMO.md).
+
 ## Security and privacy
 
 - Repository files remain local.
@@ -195,7 +214,11 @@ tests/     Unit, integration, and end-to-end tests
 - [Debugging](debugging.md)
 - [MCP connection](MCP%20connection.md)
 - [Authentication and security](authentication%20and%20security.md)
+- [Demo script](DEMO.md)
+- [Release checklist](RELEASE_CHECKLIST.md)
+- [Contributing](CONTRIBUTING.md)
+- [OmniRush session record](OMNIRUSH_SESSIONS.md)
 
 ## License
 
-License selection will be made before the public repository is finalized. The selected license must be documented here and in the repository metadata.
+ReproProof is released under the [MIT License](LICENSE).
