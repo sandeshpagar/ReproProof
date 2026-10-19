@@ -39,7 +39,7 @@ This project is designed for the OmniRush Frontier Buildathon. It is intentional
 
 ## Status
 
-Phase 1 foundation, Phase 2 static audit engine, Phase 3 execution flow, and Phase 4 interactive dashboard are implemented. The local application exposes a health endpoint, audits repositories through the browser, CLI, and API, runs bounded local project tests, and supports a network-isolated Docker rehearsal when Docker is available.
+Phase 1 foundation, Phase 2 static audit engine, Phase 3 execution flow, Phase 4 interactive dashboard, and Phase 5 reports/security hardening are implemented. The local application exposes a health endpoint, audits repositories through the browser, CLI, and API, runs bounded local project tests, supports a network-isolated Docker rehearsal, and exports versioned redacted reports.
 
 ## Requirements
 
@@ -105,6 +105,13 @@ The passing fixture should score `100/100`. The broken fixture intentionally rep
 npm run audit -- ./fixtures/passing-repository --json
 ```
 
+Generate a versioned report. Use `--output` when the JSON or Markdown file will be consumed by another tool:
+
+```bash
+npm run audit -- ./fixtures/passing-repository --report markdown --output reproproof-report.md
+npm run audit -- ./fixtures/passing-repository --report json --output reproproof-report.json
+```
+
 Run the discovered local test command:
 
 ```bash
@@ -132,9 +139,11 @@ The create response includes an `auditId`. Use it to run the Phase 3 checks:
 GET  /api/audits/:auditId
 POST /api/audits/:auditId/test
 POST /api/audits/:auditId/rehearsal
+GET  /api/audits/:auditId/report?format=markdown
+GET  /api/audits/:auditId/report?format=json
 ```
 
-If Docker is unavailable, the rehearsal returns `skipped` with a reason. It never reports a skipped rehearsal as passed.
+Reports contain a schema version, timestamp, score breakdown, findings, and execution results. Absolute local paths and secret-like values are removed or redacted before export. If Docker is unavailable, the rehearsal returns `skipped` with a reason. It never reports a skipped rehearsal as passed.
 
 ## Docker verification
 

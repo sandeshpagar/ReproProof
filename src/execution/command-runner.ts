@@ -16,6 +16,12 @@ export interface CommandSpec {
 
 const DEFAULT_TIMEOUT_MS = 30_000;
 const DEFAULT_MAX_OUTPUT_BYTES = 64 * 1024;
+const MAX_TIMEOUT_MS = 5 * 60 * 1000;
+const MAX_OUTPUT_BYTES = 1024 * 1024;
+
+function positiveLimit(value: number | undefined, fallback: number, maximum: number): number {
+  return typeof value === "number" && Number.isFinite(value) && value > 0 ? Math.min(value, maximum) : fallback;
+}
 
 function appendBounded(buffer: string, chunk: Buffer, maxBytes: number): { value: string; truncated: boolean } {
   const remainingBytes = maxBytes - Buffer.byteLength(buffer, "utf8");
@@ -37,8 +43,8 @@ function appendBounded(buffer: string, chunk: Buffer, maxBytes: number): { value
 }
 
 export function runCommand(spec: CommandSpec): Promise<ExecutionResult> {
-  const timeoutMs = spec.timeoutMs ?? DEFAULT_TIMEOUT_MS;
-  const maxOutputBytes = spec.maxOutputBytes ?? DEFAULT_MAX_OUTPUT_BYTES;
+  const timeoutMs = positiveLimit(spec.timeoutMs, DEFAULT_TIMEOUT_MS, MAX_TIMEOUT_MS);
+  const maxOutputBytes = positiveLimit(spec.maxOutputBytes, DEFAULT_MAX_OUTPUT_BYTES, MAX_OUTPUT_BYTES);
   const startedAt = Date.now();
 
   return new Promise((resolve) => {

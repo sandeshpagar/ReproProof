@@ -140,6 +140,8 @@ A first-time user can select a fixture, run the audit, inspect a blocker, run re
 
 ## 7. Phase 5 — Reports, security, and hardening
 
+**Status:** Implemented with versioned reports, API/CLI exports, path hardening, redaction, and malformed/empty repository coverage.
+
 ### Objectives
 
 Make the product safe, portable, and credible to a reviewer.

@@ -214,7 +214,7 @@ GET  /api/audits/:id/report?format=markdown
 
 The API must validate request bodies and never accept a raw shell command from the browser.
 
-Phase 2 implements `POST /api/audits` with a JSON body containing only `repositoryPath`. Phase 3 adds stored audit lookup, bounded local test execution, and the Docker rehearsal endpoint. Execution results are captured with timeout, output, signal, network-mode, and redaction metadata.
+Phase 2 implements `POST /api/audits` with a JSON body containing only `repositoryPath`. Phase 3 adds stored audit lookup, bounded local test execution, and the Docker rehearsal endpoint. Phase 5 adds versioned report generation through the API and CLI. Execution results are captured with timeout, output, signal, network-mode, and redaction metadata; reports omit machine-local working directories.
 
 ## 9. Future MCP boundary
 

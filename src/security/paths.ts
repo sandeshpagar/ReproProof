@@ -1,4 +1,7 @@
 import { realpath, stat } from "node:fs/promises";
+import { isAbsolute, relative, win32 } from "node:path";
+
+const MAX_REPOSITORY_PATH_LENGTH = 4_096;
 
 export class RepositoryValidationError extends Error {
   public readonly code = "INVALID_REPOSITORY_PATH";
@@ -12,6 +15,10 @@ export class RepositoryValidationError extends Error {
 export async function validateRepositoryPath(input: string): Promise<string> {
   if (typeof input !== "string" || input.trim().length === 0) {
     throw new RepositoryValidationError("A repository directory path is required.");
+  }
+
+  if (input.length > MAX_REPOSITORY_PATH_LENGTH || input.includes("\0")) {
+    throw new RepositoryValidationError("The repository directory path is invalid or too long.");
   }
 
   let resolvedPath: string;
@@ -40,6 +47,16 @@ export async function validateRepositoryPath(input: string): Promise<string> {
 }
 
 export function toRelativeRepositoryPath(rootPath: string, filePath: string): string {
-  const relativePath = filePath.slice(rootPath.length).replace(/^[\\/]+/, "");
+  const pathApi = rootPath.includes("\\") || filePath.includes("\\") ? win32 : { relative, isAbsolute };
+  const relativePath = pathApi.relative(rootPath, filePath);
+
+  if (relativePath === "" || relativePath === ".") {
+    return "";
+  }
+
+  if (relativePath.startsWith("..") || pathApi.isAbsolute(relativePath)) {
+    throw new RepositoryValidationError("The scanner refused a path outside the selected repository.");
+  }
+
   return relativePath.split("\\").join("/");
 }

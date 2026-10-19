@@ -123,6 +123,8 @@ Integration tests must verify that the expected findings are produced for each f
 - Redacted values do not reappear in output.
 - Empty finding lists render correctly.
 - Failed and skipped rehearsals are distinguishable from passes.
+- JSON and Markdown reports include a report version and timestamp.
+- Reports do not include raw secrets, absolute local paths, or execution working directories.
 
 ## 7. UI and end-to-end tests
 
@@ -177,6 +179,9 @@ No test may silently download data, call an external API, or depend on a develop
 - [ ] Windows development paths do not appear in committed files.
 - [ ] Docker image builds from the project directory.
 - [ ] `npm test` passes with network disabled.
+- [ ] JSON report export succeeds.
+- [ ] Markdown report export succeeds.
+- [ ] Malformed and empty repositories return understandable findings.
 
 ## 10. Quality gates
 

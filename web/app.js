@@ -251,42 +251,44 @@ function downloadFile(filename, content, type) {
   const link = document.createElement("a");
   link.href = url;
   link.download = filename;
+  document.body.append(link);
   link.click();
+  link.remove();
   URL.revokeObjectURL(url);
 }
 
-function safeExecution(execution) {
-  if (!execution) return undefined;
-  const { cwd: _cwd, ...safe } = execution;
-  return safe;
-}
+async function exportReport(format, filename, contentType) {
+  if (!state.audit) return;
 
-function safeRehearsal(rehearsal) {
-  if (!rehearsal) return undefined;
-  return {
-    ...rehearsal,
-    availability: safeExecution(rehearsal.availability),
-    build: safeExecution(rehearsal.build),
-    test: safeExecution(rehearsal.test),
-    cleanup: safeExecution(rehearsal.cleanup),
-  };
+  try {
+    const response = await fetch(`/api/audits/${state.audit.auditId}/report?format=${format}`);
+    const content = await response.text();
+
+    if (!response.ok) {
+      let message = `Report request failed with status ${response.status}`;
+      try {
+        message = JSON.parse(content).error ?? message;
+      } catch {
+        // Keep the HTTP error when the server did not return JSON.
+      }
+      throw new Error(message);
+    }
+
+    downloadFile(filename, content, contentType);
+    setApplicationStatus(`${format} report exported`, "ready");
+  } catch (error) {
+    setApplicationStatus("Report export failed", "error");
+    pathError.textContent = error instanceof Error ? error.message : "Report export failed.";
+    pathError.hidden = false;
+  }
 }
 
 function exportJson() {
-  if (!state.audit) return;
-  const { rootPath: _rootPath, ...safeRepository } = state.audit.repository;
-  const safeAudit = { ...state.audit, repository: safeRepository };
-  downloadFile("reproproof-report.json", JSON.stringify({ audit: safeAudit, execution: safeExecution(state.execution), rehearsal: safeRehearsal(state.rehearsal) }, null, 2), "application/json");
+  return exportReport("json", "reproproof-report.json", "application/json");
 }
 
 function exportMarkdown() {
-  if (!state.audit) return;
-  const findings = state.audit.findings.map((finding) => {
-    const evidence = finding.evidence.map((item) => `- ${item.file ?? "Repository"}${item.line ? `:${item.line}` : ""}: ${item.detail}`).join("\n");
-    return `### ${finding.status.toUpperCase()} · ${finding.title}\n\n${finding.description}\n\n**Evidence**\n${evidence}\n\n**Suggested remediation**\n${finding.remediation}`;
-  }).join("\n\n");
-  const markdown = `# ReproProof report\n\n- Repository: ${state.audit.repository.displayName}\n- Score: ${state.audit.score}/100\n- Audited: ${state.audit.finishedAt}\n\n## Findings\n\n${findings}\n`;
-  downloadFile("reproproof-report.md", markdown, "text/markdown");
+  return exportReport("markdown", "reproproof-report.md", "text/markdown");
 }
 
 async function runAudit(event) {

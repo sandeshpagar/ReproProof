@@ -30,6 +30,10 @@ function imageTagFor(repositoryPath: string): string {
   return `reproproof-rehearsal-${digest}`;
 }
 
+function safeImageTag(value: string | undefined, repositoryPath: string): string {
+  return value && /^[a-z0-9][a-z0-9_.-]{0,127}$/.test(value) ? value : imageTagFor(repositoryPath);
+}
+
 function dockerCommand(
   label: string,
   args: string[],
@@ -54,7 +58,7 @@ export async function runCleanRoomRehearsal(
 ): Promise<DockerRehearsalResult> {
   const snapshot = await scanRepository(repositoryPath);
   const run = options.run ?? runCommand;
-  const imageTag = options.imageTag ?? imageTagFor(snapshot.rootPath);
+  const imageTag = safeImageTag(options.imageTag, snapshot.rootPath);
   const availability = await run(dockerCommand(
     "Docker availability check",
     ["version", "--format", "{{.Server.Version}}"],

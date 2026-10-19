@@ -117,3 +117,45 @@ test("audit API exposes the clean-room rehearsal endpoint", async () => {
     assert.equal(rehearsalResult.rehearsal.networkMode, "none");
   }, { runRehearsal: async () => fakeRehearsal });
 });
+
+test("audit API serves versioned JSON and Markdown reports without local paths", async () => {
+  await withServer(async (baseUrl) => {
+    const createResponse = await fetch(`${baseUrl}/api/audits`, {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ repositoryPath: passingFixture }),
+    });
+    const created = (await createResponse.json()) as { auditId: string };
+
+    const jsonResponse = await fetch(`${baseUrl}/api/audits/${created.auditId}/report?format=json`);
+    const report = (await jsonResponse.json()) as { reportVersion: string; repository: { displayName: string; rootPath?: string } };
+    assert.equal(jsonResponse.status, 200);
+    assert.equal(report.reportVersion, "1.0.0");
+    assert.equal(report.repository.displayName, "passing-repository");
+    assert.equal("rootPath" in report.repository, false);
+    assert.match(jsonResponse.headers.get("content-disposition") ?? "", /reproproof-report\.json/);
+
+    const markdownResponse = await fetch(`${baseUrl}/api/audits/${created.auditId}/report?format=markdown`);
+    const markdown = await markdownResponse.text();
+    assert.equal(markdownResponse.status, 200);
+    assert.match(markdownResponse.headers.get("content-type") ?? "", /text\/markdown/);
+    assert.match(markdown, /# ReproProof reproducibility report/);
+    assert.equal(markdown.includes(passingFixture), false);
+  });
+});
+
+test("audit API rejects unknown report formats", async () => {
+  await withServer(async (baseUrl) => {
+    const createResponse = await fetch(`${baseUrl}/api/audits`, {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ repositoryPath: passingFixture }),
+    });
+    const created = (await createResponse.json()) as { auditId: string };
+    const response = await fetch(`${baseUrl}/api/audits/${created.auditId}/report?format=xml`);
+    const body = (await response.json()) as { error: string };
+
+    assert.equal(response.status, 400);
+    assert.match(body.error, /format must be json or markdown/);
+  });
+});

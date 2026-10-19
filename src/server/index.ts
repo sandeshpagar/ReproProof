@@ -8,6 +8,7 @@ import { auditRepository } from "../audit/repository-audit.js";
 import type { AuditResult } from "../domain/audit.js";
 import { runCleanRoomRehearsal } from "../execution/docker-rehearsal.js";
 import { runProjectTest } from "../execution/project-test.js";
+import { createReport, renderJsonReport, renderMarkdownReport } from "../reports/report.js";
 import { RepositoryValidationError } from "../security/paths.js";
 import { getHealthResponse } from "./health.js";
 
@@ -44,6 +45,23 @@ function writeJson(
 ): void {
   response.writeHead(statusCode, { "content-type": "application/json; charset=utf-8" });
   response.end(JSON.stringify(body));
+}
+
+function writeText(
+  response: import("node:http").ServerResponse,
+  statusCode: number,
+  body: string,
+  contentType: string,
+  fileName?: string,
+): void {
+  const headers: Record<string, string> = { "content-type": contentType };
+
+  if (fileName) {
+    headers["content-disposition"] = `attachment; filename="${fileName}"`;
+  }
+
+  response.writeHead(statusCode, headers);
+  response.end(body);
 }
 
 function contentType(filePath: string): string {
@@ -106,6 +124,8 @@ export function createAppServer(options: AppServerOptions = {}) {
   const runTest = options.runTest ?? runProjectTest;
   const runRehearsal = options.runRehearsal ?? runCleanRoomRehearsal;
   const audits = new Map<string, AuditResult>();
+  const rehearsals = new Map<string, Awaited<ReturnType<typeof runCleanRoomRehearsal>>>();
+  const maxStoredAudits = 25;
 
   return createServer(async (request, response) => {
     try {
@@ -127,6 +147,15 @@ export function createAppServer(options: AppServerOptions = {}) {
         const result = await runAudit((body as { repositoryPath: string }).repositoryPath);
         const auditId = randomUUID();
         const storedResult = { ...result, auditId };
+
+        if (audits.size >= maxStoredAudits) {
+          const oldestAuditId = audits.keys().next().value;
+          if (oldestAuditId) {
+            audits.delete(oldestAuditId);
+            rehearsals.delete(oldestAuditId);
+          }
+        }
+
         audits.set(auditId, storedResult);
         writeJson(response, 200, storedResult);
         return;
@@ -143,6 +172,34 @@ export function createAppServer(options: AppServerOptions = {}) {
         }
 
         writeJson(response, 200, audit);
+        return;
+      }
+
+      const reportMatch = requestUrl.pathname.match(/^\/api\/audits\/([^/]+)\/report$/);
+
+      if (reportMatch && request.method === "GET") {
+        const audit = audits.get(reportMatch[1]);
+
+        if (!audit) {
+          writeJson(response, 404, { error: "Audit not found." });
+          return;
+        }
+
+        const format = requestUrl.searchParams.get("format") ?? "json";
+
+        if (format !== "json" && format !== "markdown") {
+          writeJson(response, 400, { error: "format must be json or markdown." });
+          return;
+        }
+
+        const report = createReport(audit, rehearsals.get(reportMatch[1]));
+
+        if (format === "markdown") {
+          writeText(response, 200, renderMarkdownReport(report), "text/markdown; charset=utf-8", "reproproof-report.md");
+        } else {
+          writeText(response, 200, renderJsonReport(report), "application/json; charset=utf-8", "reproproof-report.json");
+        }
+
         return;
       }
 
@@ -165,6 +222,7 @@ export function createAppServer(options: AppServerOptions = {}) {
         }
 
         const rehearsal = await runRehearsal(audit.repository.rootPath);
+        rehearsals.set(executionMatch[1], rehearsal);
         writeJson(response, 200, { auditId: executionMatch[1], audit, rehearsal });
         return;
       }
