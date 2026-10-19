@@ -1,0 +1,28 @@
+{
+  "name": "reproproof",
+  "version": "0.1.0",
+  "private": true,
+  "description": "A local-first reproducibility auditor for open-source repositories.",
+  "type": "module",
+  "engines": {
+    "node": ">=22.19.0"
+  },
+  "scripts": {
+    "dev": "npm run build && npm start",
+    "build": "tsc",
+    "start": "node dist/src/server/index.js",
+    "test": "npm run build && node --test dist/tests/health.test.js",
+    "audit": "npm start"
+  },
+  "keywords": [
+    "developer-tools",
+    "open-source",
+    "reproducibility",
+    "offline"
+  ],
+  "license": "MIT",
+  "devDependencies": {
+    "@types/node": "22.10.2",
+    "typescript": "5.7.2"
+  }
+}

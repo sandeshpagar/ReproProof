@@ -39,7 +39,7 @@ This project is designed for the OmniRush Frontier Buildathon. It is intentional
 
 ## Status
 
-This repository currently contains the planning documentation. Application implementation will begin in phases after the planning baseline is reviewed.
+Phase 1 foundation is implemented. The local application shell exposes a health endpoint and serves the initial dashboard. Docker verification is pending because the local Docker daemon is currently unavailable. The audit engine begins in Phase 2.
 
 ## Requirements
 
@@ -51,7 +51,7 @@ The static audit and application test suite should remain useful without Docker.
 
 ## Setup
 
-The implementation commands will be finalized during Phase 1. The intended setup is:
+Install the pinned dependencies:
 
 ```bash
 npm ci
@@ -59,13 +59,13 @@ npm ci
 
 ## Run
 
-The planned local workflow is:
+Start the local application:
 
 ```bash
 npm start
 ```
 
-Then open the displayed localhost URL in a browser.
+Then open `http://127.0.0.1:4173` in a browser. The server binds to localhost by default. The health endpoint is available at `http://127.0.0.1:4173/api/health`.
 
 ## Test
 
@@ -76,6 +76,8 @@ npm test
 ```
 
 Tests must work without an internet connection after dependencies have been installed.
+
+The Phase 1 test verifies the application health response. Later phases will add scanner, execution, report, and UI coverage.
 
 ## Docker verification
 

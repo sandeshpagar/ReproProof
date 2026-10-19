@@ -1,0 +1,112 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta
+      name="description"
+      content="ReproProof turns it works on my machine into verifiable evidence."
+    />
+    <title>ReproProof · Clean-machine readiness</title>
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <main class="shell">
+      <header class="topbar">
+        <a class="brand" href="/" aria-label="ReproProof home">
+          <span class="brand-mark" aria-hidden="true">R</span>
+          <span>ReproProof</span>
+        </a>
+        <span class="status-pill" id="app-status">Starting local app…</span>
+      </header>
+
+      <section class="hero" aria-labelledby="page-title">
+        <p class="eyebrow">Clean-machine readiness</p>
+        <h1 id="page-title">Make reproducibility something you can prove.</h1>
+        <p class="hero-copy">
+          ReproProof will audit your repository for the setup gaps that turn a clean
+          clone into an “it works on my machine” conversation.
+        </p>
+      </section>
+
+      <section class="workspace" aria-labelledby="workspace-title">
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow">Phase 1 foundation</p>
+            <h2 id="workspace-title">Your audit workspace</h2>
+          </div>
+          <span class="tag">Local only</span>
+        </div>
+
+        <div class="workspace-grid">
+          <article class="card project-card">
+            <div class="card-icon" aria-hidden="true">01</div>
+            <div>
+              <h3>Select a repository</h3>
+              <p>
+                The audit engine will inspect files on this machine. No repository
+                contents are uploaded.
+              </p>
+            </div>
+            <label class="field-label" for="repository-path">Repository path</label>
+            <input
+              id="repository-path"
+              class="text-input"
+              type="text"
+              placeholder="C:\\Projects\\my-repository"
+              autocomplete="off"
+            />
+            <button class="primary-button" type="button" disabled>
+              Run audit · Phase 2
+            </button>
+          </article>
+
+          <article class="card score-card">
+            <div class="card-icon card-icon-success" aria-hidden="true">✓</div>
+            <div>
+              <h3>Readiness score</h3>
+              <p>Static checks and clean-room rehearsal will appear here.</p>
+            </div>
+            <div class="score-placeholder" aria-label="Audit not started">
+              <span>—</span>
+              <small>/ 100</small>
+            </div>
+            <div class="score-caption">No audit started yet</div>
+          </article>
+        </div>
+      </section>
+
+      <section class="foundation" aria-labelledby="foundation-title">
+        <div class="section-heading compact-heading">
+          <div>
+            <p class="eyebrow">System check</p>
+            <h2 id="foundation-title">The foundation is online</h2>
+          </div>
+        </div>
+        <div class="check-list">
+          <div class="check-row">
+            <span class="check-dot" aria-hidden="true">✓</span>
+            <span>Local HTTP server</span>
+            <strong id="server-check">Checking…</strong>
+          </div>
+          <div class="check-row">
+            <span class="check-dot" aria-hidden="true">✓</span>
+            <span>Offline-first architecture</span>
+            <strong>Ready</strong>
+          </div>
+          <div class="check-row">
+            <span class="check-dot" aria-hidden="true">✓</span>
+            <span>Audit engine</span>
+            <strong>Phase 2</strong>
+          </div>
+        </div>
+      </section>
+
+      <footer class="footer">
+        <span>ReproProof · Developer Tools &amp; Open Source</span>
+        <span id="version-label">Version 0.1.0</span>
+      </footer>
+    </main>
+    <script type="module" src="/app.js"></script>
+  </body>
+</html>
