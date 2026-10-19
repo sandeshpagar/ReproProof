@@ -52,15 +52,16 @@ The architecture must make the following properties obvious:
 ```text
 .
 ├── src/
+│   ├── audit/
 │   ├── cli/
-│   ├── server/
 │   ├── domain/
-│   ├── scanner/
 │   ├── checks/
-│   ├── execution/
+│   ├── scanner/
 │   ├── scoring/
-│   ├── reports/
 │   ├── security/
+│   ├── server/
+│   ├── execution/
+│   ├── reports/
 │   └── config/
 ├── web/
 │   ├── index.html
@@ -211,6 +212,8 @@ GET  /api/audits/:id/report?format=markdown
 ```
 
 The API must validate request bodies and never accept a raw shell command from the browser.
+
+Phase 2 implements `POST /api/audits` with a JSON body containing only `repositoryPath`. It performs the static audit and returns the evidence-backed result. Execution and Docker rehearsal endpoints remain Phase 3 work.
 
 ## 9. Future MCP boundary
 

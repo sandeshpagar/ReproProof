@@ -1,0 +1,11 @@
+{
+  "name": "reproproof-passing-fixture",
+  "version": "1.0.0",
+  "private": true,
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "test": "node test.js"
+  }
+}

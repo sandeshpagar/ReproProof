@@ -39,7 +39,7 @@ This project is designed for the OmniRush Frontier Buildathon. It is intentional
 
 ## Status
 
-Phase 1 foundation is implemented. The local application shell exposes a health endpoint and serves the initial dashboard. Docker verification is pending because the local Docker daemon is currently unavailable. The audit engine begins in Phase 2.
+Phase 1 foundation and Phase 2 static audit engine are implemented. The local application exposes a health endpoint, serves the dashboard shell, audits repositories through the CLI and API, and includes passing and intentionally broken fixtures. Docker verification remains a separate Phase 1/3 environment check when the local daemon is available.
 
 ## Requirements
 
@@ -77,7 +77,33 @@ npm test
 
 Tests must work without an internet connection after dependencies have been installed.
 
-The Phase 1 test verifies the application health response. Later phases will add scanner, execution, report, and UI coverage.
+The Phase 1 test verifies the application health response. Phase 2 adds scanner, reproducibility-rule, scoring, fixture, and API coverage. Execution and report coverage will be added in later phases.
+
+The Phase 2 suite covers repository scanning, reproducibility checks, deterministic scoring, fixture audits, invalid paths, and the `POST /api/audits` endpoint.
+
+## Audit a repository
+
+Run the static audit from the command line:
+
+```bash
+npm run audit -- ./fixtures/passing-repository
+npm run audit -- ./fixtures/broken-repository
+```
+
+The passing fixture should score `100/100`. The broken fixture intentionally reports reproducibility blockers. For machine-readable output:
+
+```bash
+npm run audit -- ./fixtures/passing-repository --json
+```
+
+The local API accepts only a repository path and never accepts a raw shell command:
+
+```bash
+curl.exe --fail --silent \
+  -X POST http://127.0.0.1:4173/api/audits \
+  -H "content-type: application/json" \
+  -d "{\"repositoryPath\":\"./fixtures/passing-repository\"}"
+```
 
 ## Docker verification
 

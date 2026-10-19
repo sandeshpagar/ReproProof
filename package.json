@@ -11,8 +11,8 @@
     "dev": "npm run build && npm start",
     "build": "tsc",
     "start": "node dist/src/server/index.js",
-    "test": "npm run build && node --test dist/tests/health.test.js",
-    "audit": "npm start"
+    "test": "npm run build && node --test dist/tests/*.test.js",
+    "audit": "npm run build && node dist/src/cli/audit.js"
   },
   "keywords": [
     "developer-tools",
